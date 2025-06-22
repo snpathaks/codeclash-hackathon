@@ -29,4 +29,8 @@ export default function PromptInput({
       </button>
     </div>
   );
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes
