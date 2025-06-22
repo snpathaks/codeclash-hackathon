@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Presentation - PresentAI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .export-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .export-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .template-preview {
+            aspect-ratio: 16/9;
+            background: white;
+            color: black;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    <div class="container mx-auto px-6 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4">Export Your Presentation</h1>
+            <p class="text-xl text-gray-300">Choose your preferred format and style</p>
+        </header>
+
+        <!-- Export Options -->
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- JSON Export -->
+            <div class="export-option glass-effect rounded-xl p-6" onclick="exportJSON()">
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">📄</span>
+                    </div>
+                    <h3 class="text-xl font-semibold">JSON Format</h3>
+                    <p class="text-gray-400 text-sm">Raw data format for developers</p>
+                </div>
+                <div class="template-preview rounded p-2 text-center">
+                    <div class="font-bold text-xs">JSON Export</div>
+                    <div class="text-xs mt-1">Structured data format</div>
+                </div>
+            </div>
+
+            <!-- HTML Export -->
+            <div class="export-option glass-effect rounded-xl p-6" onclick="exportHTML()">
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">🌐</span>
+                    </div>
+                    <h3 class="text-xl font-semibold">HTML Slideshow</h3>
+                    <p class="text-gray-400 text-sm">Interactive web presentation</p>
+                </div>
+                <div class="template-preview rounded p-2">
+                    <div class="font-bold text-xs mb-1">Web Slideshow</div>
+                    <div class="text-xs">• Navigation controls</div>
+                    <div class="text-xs">• Responsive design</div>
+                </div>
+            </div>
+
+            <!-- PDF Export -->
+            <div class="export-option glass-effect rounded-xl p-6" onclick="exportPDF()">
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">📑</span>
+                    </div>
+                    <h3 class="text-xl font-semibold">PDF Document</h3>
+                    <p class="text-gray-400 text-sm">Print-ready format</p>
+                </div>
+                <div class="template-preview rounded p-2">
+                    <div class="font-bold text-xs mb-1">PDF Export</div>
+                    <div class="text-xs">• High quality</div>
+                    <div class="text-xs">• Print ready</div>
+                </div>
+            </div>
+
+            <!-- PowerPoint Export -->
+            <div class="export-option glass-effect rounded-xl p-6" onclick="exportPPTX()">
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <h3 class="text-xl font-semibold">PowerPoint</h3>
+                    <p class="text-gray-400 text-sm">PPTX format for editing</p>
+                </div>
+                <div class="template-preview rounded p-2">
+                    <div class="font-bold text-xs mb-1">PowerPoint</div>
+                    <div class="text-xs">• Editable slides</div>
+                    <div class="text-xs">• Professional format</div>
+                </div>
+            </div>
+
+            <!-- Markdown Export -->
+            <div class="export-option glass-effect rounded-xl p-6" onclick="exportMarkdown()">
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">📝</span>
+                    </div>
+                    <h3 class="text-xl font-semibold">Markdown</h3>
+                    <p class="text-gray-400 text-sm">Plain text with formatting</p>
+                </div>
+                <div class="template-preview rounded p-2">
+                    <div class="font-bold text-xs mb-1"># Markdown</div>
+                    <div class="text-xs">* Simple format</div>
+                    <div class="text-xs">* Easy to edit</div>
+                </div>
+            </div>
+
+            <!-- Custom Template -->
+            <div class="export-option glass-effect rounded-xl p-6" onclick="customTemplate()">
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">🎨</span>
+                    </div>
+                    <h3 class="text-xl font-semibold">Custom Template</h3>
+                    <p class="text-gray-400 text-sm">Choose your own style</p>
+                </div>
+                <div class="template-preview rounded p-2 text-center">
+                    <div class="font-bold text-xs">Custom Design</div>
+                    <div class="text-xs mt-1">Your style, your way</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Progress -->
+        <div id="exportProgress" class="hidden max-w-md mx-auto mt-12 glass-effect rounded-xl p-6 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold mb-2">Exporting Presentation...</h3>
+            <p class="text-gray-400">Please wait while we prepare your file</p>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center mt-12">
+            <button onclick="window.close()" class="glass-effect px-8 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all">
+                ← Back to Editor
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let slides = [];
+
+        // Load slides from localStorage or parent window
+        function loadSlides() {
+            const savedSlides = localStorage.getItem('presentai_slides');
+            if (savedSlides) {
+                try {
+                    const data = JSON.parse(savedSlides);
+                    slides = data.slides || [];
+                } catch (e) {
+                    console.error('Error loading slides:', e);
+                }
+            }
+
+            if (slides.length === 0) {
+                slides = [
+                    { title: 'Sample Slide', content: 'This is a sample presentation' }
+                ];
+            }
+        }
+
+        function showProgress() {
+            document.getElementById('exportProgress').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('exportProgress').classList.add('hidden');
+            }, 2000);
+        }
+
+        function exportJSON() {
+            showProgress();
+            const dataStr = JSON.stringify(slides, null, 2);
+            downloadFile(dataStr, 'presentation.json', 'application/json');
+        }
+
+        function exportHTML() {
+            showProgress();
+            const htmlContent = generateHTMLSlideshow();
+            downloadFile(htmlContent, 'presentation.html', 'text/html');
+        }
+
+        function exportPDF() {
+            showProgress();
+            // In a real implementation, you'd use a PDF library like jsPDF
+            alert('PDF export would be implemented with a library like jsPDF');
+        }
+
+        function exportPPTX() {
+            showProgress();
+            // In a real implementation, you'd use a library like PptxGenJS
+            alert('PowerPoint export would be implemented with PptxGenJS library');
+        }
+
+        function exportMarkdown() {
+            showProgress();
+            const markdownContent = generateMarkdown();
+            downloadFile(markdownContent, 'presentation.md', 'text/markdown');
+        }
+
+        function customTemplate() {
+            alert('Custom template builder would open here');
+        }
+
+        function generateHTMLSlideshow() {
+            const slideHTML = slides.map((slide, index) => `
+                <div class="slide" data-slide="${index}" ${index === 0 ? 'style="display: block;"' : 'style="display: none;"'}>
+                    <h1>${slide.title}</h1>
+                    <div class="content">${slide.content.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+        .slideshow-container { max-width: 1000px; margin: auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .slide { padding: 60px; min-height: 400px; display: none; }
+        .slide h1 { font-size: 2.5em; margin-bottom: 30px; color: #333; }
+        .content { font-size: 1.2em; line-height: 1.6; color: #666; }
+        .controls { text-align: center; padding: 20px; background: #333; }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .counter { color: white; margin: 0 20px; }
+    </style>
+</head>
+<body>
+    <div class="slideshow-container">
+        ${slideHTML}
+    </div>
+    <div class="controls">
+        <button class="btn" onclick="changeSlide(-1)">Previous</button>
+        <span class="counter" id="counter">1 / ${slides.length}</span>
+        <button class="btn" onclick="changeSlide(1)">Next</button>
+    </div>
+    <script>
+        let currentSlide = 0;
+        const totalSlides = ${slides.length};
+        
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            if (n >= totalSlides) currentSlide = 0;
+            if (n < 0) currentSlide = totalSlides - 1;
+            
+            slides.forEach(slide => slide.style.display = 'none');
+            slides[currentSlide].style.display = 'block';
+            
+            document.getElementById('counter').textContent = (currentSlide + 1) + ' / ' + totalSlides;
+        }
+        
+        function changeSlide(n) {
+            currentSlide += n;
+            showSlide(currentSlide);
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        });
+    </script>
+</body>
+</html>`;
+        }
+
+        function generateMarkdown() {
+            return slides.map((slide, index) => `
+# ${slide.title}
+
+${slide.content}
+
+---
+            `).join('\n');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSlides();
+        });
+    </script>
+</body>
+</html>
