@@ -22,8 +22,5 @@ export default function SlidePreview({
       </div>
     </div>
   );
-<<<<<<< Updated upstream
 }
-=======
-}
->>>>>>> Stashed changes
+

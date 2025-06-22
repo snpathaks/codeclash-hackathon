@@ -37,8 +37,4 @@ export default function SlideEditor({
       />
     </div>
   );
-<<<<<<< Updated upstream
 }
-=======
-}
->>>>>>> Stashed changes
