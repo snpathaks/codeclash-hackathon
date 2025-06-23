@@ -121,28 +121,21 @@ export default function App() {
   const handleGenerateSlides = async (prompt: string) => {
     setIsGenerating(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const generatedSlides: Slide[] = [
-        {
-          id: 1,
-          title: "Introduction",
-          content: "Welcome to our presentation",
-          notes: "This is the opening slide",
-          elements: [],
-        },
-        {
-          id: 2,
-          title: "Main Content",
-          content: "Key points and information",
-          notes: "Elaborate on the main topics",
-          elements: [],
-        },
-      ];
-      setSlides(generatedSlides);
-      setCurrentSlide(0);
-      setPresentationId(`ai_pres_${Date.now()}`);
-      setHasImage(true);
-      alert("Presentation generated successfully!");
+      const response = await fetch("http://localhost:5000/api/generate-slide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await response.json();
+      if (data.slide) {
+        setSlides([data.slide]);
+        setCurrentSlide(0);
+        setPresentationId(`ai_pres_${Date.now()}`);
+        setHasImage(true);
+        alert("Presentation generated successfully!");
+      } else {
+        alert("Failed to generate slide: " + (data.error || "Unknown error"));
+      }
     } catch (err) {
       console.error("Generation error:", err);
       alert("Error generating presentation. Please try again.");
