@@ -299,7 +299,7 @@ export default function SlideEditor({
           <div
             ref={slideRef}
             className="relative bg-white rounded-lg shadow-2xl overflow-hidden mb-4"
-            style={{ width: "960px", height: "540px", aspectRatio: "16/9" }}
+            style={{ width: "800px", height: "450px", aspectRatio: "16/9" }}
             onClick={handleSlideClick}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -605,8 +605,8 @@ export default function SlideEditor({
           </div>
 
           {/* Slide Notes */}
-          <div className="w-full max-w-5xl">
-            <div className="bg-gray-100 rounded-lg p-4">
+          <div className="w-full" style={{ width: "800px" }}>
+            <div className="bg-gray-100 rounded-lg p-2">
               <h3 className="text-sm font-medium text-gray-700 mb-2">
                 Slide Notes
               </h3>
@@ -614,7 +614,7 @@ export default function SlideEditor({
                 value={slideNotes}
                 onChange={(e) => handleNotesUpdate(e.target.value)}
                 placeholder="Add your speaker notes here..."
-                className="w-full h-20 bg-white border-gray-300 text-gray-800 text-sm resize-none"
+                className="w-full h-12 bg-white border-gray-300 text-gray-800 text-sm resize-none"
               />
             </div>
           </div>
