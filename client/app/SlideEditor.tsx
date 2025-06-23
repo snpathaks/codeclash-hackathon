@@ -93,7 +93,7 @@ export default function SlideEditor({
   };
 
   const addElement = (
-    type: "text" | "image" | "shape" | "bulletList",
+    type: "text" | "image" | "shape" | "bulletList" | "table",
     x: number = 100,
     y: number = 100,
     extraProps: any = {}
@@ -135,6 +135,12 @@ export default function SlideEditor({
         width = 150;
         height = 150;
         style = { imageUrl: extraProps.imageUrl || "" };
+        break;
+      case "table":
+        content = "";
+        width = 200;
+        height = 100;
+        style = { tableData: extraProps.tableData || {} };
         break;
     }
 
@@ -431,6 +437,53 @@ export default function SlideEditor({
                     </div>
                   )}
 
+                  {element.type === "table" && element.tableData && (
+                    <div className="w-full h-full overflow-auto flex items-center justify-center p-2">
+                      <table className="border-collapse w-full h-full bg-white text-gray-800">
+                        <tbody>
+                          {element.tableData.cells.map((row, rowIdx) => (
+                            <tr key={rowIdx}>
+                              {row.map((cell, colIdx) => (
+                                <td
+                                  key={colIdx}
+                                  className="border border-gray-400 px-2 py-1 text-sm text-center min-w-[40px] min-h-[24px] bg-white"
+                                  contentEditable={
+                                    selectedElement === element.id &&
+                                    activeTool === "select"
+                                  }
+                                  suppressContentEditableWarning={true}
+                                  onBlur={(e) => {
+                                    const newCells =
+                                      element.tableData?.cells.map((r) => [
+                                        ...r,
+                                      ]);
+                                    if (newCells) {
+                                      newCells[rowIdx][colIdx] =
+                                        e.currentTarget.textContent || "";
+                                      updateElement(element.id, {
+                                        tableData: {
+                                          rows:
+                                            element.tableData?.rows ??
+                                            newCells.length,
+                                          cols:
+                                            element.tableData?.cols ??
+                                            (newCells[0]?.length || 0),
+                                          cells: newCells,
+                                        },
+                                      });
+                                    }
+                                  }}
+                                >
+                                  {cell}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
                   {/* Element Controls */}
                   {selectedElement === element.id &&
                     activeTool === "select" && (
@@ -602,7 +655,9 @@ export default function SlideEditor({
                 e.stopPropagation();
                 // Open file dialog
                 // Workaround: trigger the input's click() directly to avoid type mismatch
-                const input = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+                const input = document.querySelector(
+                  'input[type="file"]'
+                ) as HTMLInputElement | null;
                 input?.click();
               }}
             >
