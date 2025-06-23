@@ -42,7 +42,7 @@ export default function Home() {
 
   // Slides state management
   const [slides, setSlides] = useState([
-    { title: 'Untitled Slide', content: '' }
+    { id: 1, title: 'Untitled Slide', content: '', elements: [] }
   ]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [presentationId, setPresentationId] = useState(null);
@@ -50,8 +50,15 @@ export default function Home() {
 
   // Handler: New Slide
   const handleNewSlide = () => {
-    setSlides((prev) => [...prev, { title: 'Untitled Slide', content: '' }]);
+    const newSlide = {
+      id: slides.length + 1,
+      title: `Slide ${slides.length + 1}`,
+      content: '',
+      elements: []
+    };
+    setSlides((prev) => [...prev, newSlide]);
     setCurrentSlide(slides.length); // set to new slide index
+    setHasImage(true); // Show the editor
   };
 
   // Handler: Save Presentation
@@ -87,6 +94,13 @@ export default function Home() {
     alert('Export to PPTX is not implemented yet.');
   };
 
+  // Handler: Tool selection
+  const handleToolSelect = (toolId: string) => {
+    setActiveTool(toolId);
+    // Add tool-specific logic here
+    console.log(`Selected tool: ${toolId}`);
+  };
+
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
       {/* Header */}
@@ -100,6 +114,24 @@ export default function Home() {
               SlideFlow
             </h1>
           </div>
+
+          {/* Slide Navigation */}
+          {slides.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">Slide:</span>
+              <select 
+                value={currentSlide} 
+                onChange={(e) => setCurrentSlide(Number(e.target.value))}
+                className="bg-gray-700 border-gray-600 rounded px-2 py-1 text-sm"
+              >
+                {slides.map((slide, index) => (
+                  <option key={slide.id} value={index}>
+                    {index + 1} - {slide.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -133,7 +165,7 @@ export default function Home() {
             return (
               <button
                 key={tool.id}
-                onClick={() => setActiveTool(tool.id)}
+                onClick={() => handleToolSelect(tool.id)}
                 className={cn(
                   "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 group relative",
                   activeTool === tool.id
@@ -143,7 +175,7 @@ export default function Home() {
                 title={tool.label}
               >
                 <Icon className="w-5 h-5" />
-                <span className="absolute left-16 bg-gray-800 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                <span className="absolute left-16 bg-gray-800 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                   {tool.label}
                 </span>
               </button>
@@ -155,7 +187,8 @@ export default function Home() {
         <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-900 to-gray-800">
           <SlideEditor 
             hasImage={hasImage} 
-            setHasImage={setHasImage} 
+            setHasImage={setHasImage}
+            activeTool={activeTool}
           />
         </div>
 
