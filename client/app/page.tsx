@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
   MousePointer, 
   Crop, 
-  Brush, 
+  AlignLeft, 
   Type, 
   Square, 
   Eraser, 
@@ -15,54 +15,36 @@ import {
   Plus,
   Save,
   Download,
-  Undo,
-  Redo,
-  Image as ImageIcon,
-  Upload,
   Sparkles
 } from 'lucide-react';
-import PromptInput from '@/app/PromptInput';
-import SlideEditor from '@/app/SlideEditor';
-import SlidePreview from '@/app/SlidePreview';
+import PromptInput from './PromptInput';
+import SlideEditor from './SlideEditor';
+import ToolPanel from '@/components/ToolPanel';
+import { Slide } from '@/types/slide';
+
+// Define your type here
 
 const tools = [
   { id: 'select', icon: MousePointer, label: 'Select' },
   { id: 'crop', icon: Crop, label: 'Crop' },
-  { id: 'brush', icon: Brush, label: 'Brush' },
+  { id: 'alignment', icon: AlignLeft, label: 'Alignment' },
   { id: 'text', icon: Type, label: 'Text' },
   { id: 'shape', icon: Square, label: 'Shape' },
   { id: 'eraser', icon: Eraser, label: 'Eraser' },
   { id: 'frame', icon: Frame, label: 'Frame' },
 ];
 
-interface SlideElement {
-  id: string;
-  type: 'text' | 'image' | 'shape';
-  content: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  style?: any;
-}
-
-interface Slide {
-  id: number;
-  title: string;
-  content: string;
-  elements: SlideElement[];
-}
-
-export default function Home() {
+export default function App() {
   const [activeTool, setActiveTool] = useState('select');
   const [showAI, setShowAI] = useState(true);
   const [hasImage, setHasImage] = useState(false);
 
-  // Slides state management
+  // Local state for slides and currentSlide
   const [slides, setSlides] = useState<Slide[]>([
-    { id: 1, title: 'Untitled Slide', content: '', elements: [] }
+    { id: 1, title: 'Untitled Slide', content: '', notes: '', elements: [] }
   ]);
   const [currentSlide, setCurrentSlide] = useState(0);
+
   const [presentationId, setPresentationId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -73,40 +55,21 @@ export default function Home() {
       id: slides.length + 1,
       title: `Slide ${slides.length + 1}`,
       content: '',
+      notes: '',
       elements: []
     };
-    setSlides((prev) => [...prev, newSlide]);
-    setCurrentSlide(slides.length); // set to new slide index
-    setHasImage(true); // Show the editor
+    setSlides([...slides, newSlide]);
+    setCurrentSlide(slides.length);
+    setHasImage(true);
   };
 
   // Handler: Save Presentation
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:5000/api/presentai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt: 'Manual save', 
-          slides: slides.map(slide => ({
-            title: slide.title,
-            content: slide.content
-          }))
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save presentation');
-      }
-      
-      const data = await response.json();
-      if (data.presentation_id) {
-        setPresentationId(data.presentation_id);
-        alert('Presentation saved successfully!');
-      } else {
-        alert('Failed to save presentation.');
-      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setPresentationId(`pres_${Date.now()}`);
+      alert('Presentation saved successfully!');
     } catch (err) {
       console.error('Save error:', err);
       alert('Error saving presentation. Please try again.');
@@ -121,24 +84,8 @@ export default function Home() {
       alert('Please save your presentation first!');
       return;
     }
-    
     try {
-      const response = await fetch(`http://localhost:5000/api/presentations/${presentationId}/export`);
-      if (!response.ok) {
-        throw new Error('Failed to export presentation');
-      }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `presentation_${presentationId}.pptx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       alert('Presentation exported successfully!');
     } catch (err) {
       console.error('Export error:', err);
@@ -149,49 +96,47 @@ export default function Home() {
   // Handler: Tool selection
   const handleToolSelect = (toolId: string) => {
     setActiveTool(toolId);
-    console.log(`Selected tool: ${toolId}`);
   };
 
   // Handler: Update current slide
   const handleSlideUpdate = (updatedSlide: Slide) => {
-    setSlides(prev => prev.map((slide, index) => 
+    const newSlides = slides.map((slide, index) =>
       index === currentSlide ? updatedSlide : slide
-    ));
+    );
+    setSlides(newSlides);
+  };
+
+  // Handler: Change current slide
+  const handleSlideChange = (slideIndex: number) => {
+    setCurrentSlide(slideIndex);
   };
 
   // Handler: Generate slides from AI
   const handleGenerateSlides = async (prompt: string) => {
     setIsGenerating(true);
     try {
-      const response = await fetch('http://localhost:5000/api/presentai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate presentation');
-      }
-      
-      const data = await response.json();
-      
-      if (data.slides && data.slides.length > 0) {
-        const newSlides: Slide[] = data.slides.map((slide: any, index: number) => ({
-          id: index + 1,
-          title: slide.title || `Slide ${index + 1}`,
-          content: slide.content || '',
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const generatedSlides: Slide[] = [
+        {
+          id: 1,
+          title: 'Introduction',
+          content: 'Welcome to our presentation',
+          notes: 'This is the opening slide',
           elements: []
-        }));
-        
-        setSlides(newSlides);
-        setCurrentSlide(0);
-        setPresentationId(data.presentation_id);
-        setHasImage(true);
-        
-        alert('Presentation generated successfully!');
-      } else {
-        alert('No slides were generated. Please try a different prompt.');
-      }
+        },
+        {
+          id: 2,
+          title: 'Main Content',
+          content: 'Key points and information',
+          notes: 'Elaborate on the main topics',
+          elements: []
+        }
+      ];
+      setSlides(generatedSlides);
+      setCurrentSlide(0);
+      setPresentationId(`ai_pres_${Date.now()}`);
+      setHasImage(true);
+      alert('Presentation generated successfully!');
     } catch (err) {
       console.error('Generation error:', err);
       alert('Error generating presentation. Please try again.');
@@ -206,14 +151,23 @@ export default function Home() {
       alert('Cannot delete the last slide');
       return;
     }
-    
     const newSlides = slides.filter((_, index) => index !== currentSlide);
+    const newCurrentSlide = currentSlide >= newSlides.length ? newSlides.length - 1 : currentSlide;
     setSlides(newSlides);
-    
-    // Adjust current slide index
-    if (currentSlide >= newSlides.length) {
-      setCurrentSlide(newSlides.length - 1);
-    }
+    setCurrentSlide(newCurrentSlide);
+  };
+
+  // Tool panel handlers
+  const handleAlignmentChange = (alignment: 'left' | 'center' | 'right') => {
+    console.log('Alignment changed to:', alignment);
+  };
+
+  const handleShapeChange = (shape: 'rectangle' | 'circle' | 'triangle') => {
+    console.log('Shape changed to:', shape);
+  };
+
+  const handleColorChange = (color: string) => {
+    console.log('Color changed to:', color);
   };
 
   return (
@@ -236,7 +190,7 @@ export default function Home() {
               <span className="text-sm text-gray-400">Slide:</span>
               <select 
                 value={currentSlide} 
-                onChange={(e) => setCurrentSlide(Number(e.target.value))}
+                onChange={(e) => handleSlideChange(Number(e.target.value))}
                 className="bg-gray-700 border-gray-600 rounded px-2 py-1 text-sm text-white"
               >
                 {slides.map((slide, index) => (
@@ -273,18 +227,12 @@ export default function Home() {
             Export
           </Button>
           <Separator orientation="vertical" className="h-6 bg-gray-600" />
-          <Button variant="ghost" size="sm" className="hover:bg-gray-700">
-            <Undo className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="hover:bg-gray-700">
-            <Redo className="w-4 h-4" />
-          </Button>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Tools */}
-        <div className="w-20 bg-gray-800/30 backdrop-blur-sm border-r border-gray-700 flex flex-col items-center py-6 gap-4">
+        <div className="w-20 bg-gray-800/30 backdrop-blur-sm border-r border-gray-700 flex flex-col items-center py-6 gap-4 relative">
           {tools.map((tool) => {
             const Icon = tool.icon;
             return (
@@ -306,6 +254,15 @@ export default function Home() {
               </button>
             );
           })}
+
+          {/* Tool Panel */}
+          <ToolPanel
+            activeTool={activeTool}
+            onToolChange={handleToolSelect}
+            onAlignmentChange={handleAlignmentChange}
+            onShapeChange={handleShapeChange}
+            onColorChange={handleColorChange}
+          />
         </div>
 
         {/* Main Canvas Area */}
@@ -316,6 +273,7 @@ export default function Home() {
             activeTool={activeTool}
             currentSlide={slides[currentSlide]}
             onSlideUpdate={handleSlideUpdate}
+            onToolChange={handleToolSelect}
           />
         </div>
 

@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Sparkles, Wand2 } from 'lucide-react';
@@ -63,7 +61,7 @@ export default function PromptInput({ onGenerate, isGenerating }: PromptInputPro
         ) : (
           <>
             <Sparkles className="w-4 h-4 mr-2" />
-            Generate Slide
+            Generate Slides
           </>
         )}
       </Button>
