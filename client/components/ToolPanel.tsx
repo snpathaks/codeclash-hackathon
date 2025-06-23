@@ -45,6 +45,7 @@ export default function ToolPanel({
   ];
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   const [rows, setRows] = React.useState(2);
   const [cols, setCols] = React.useState(2);
 
@@ -164,6 +165,36 @@ export default function ToolPanel({
         </p>
       </div>
 
+=======
+  // Only show the panel for relevant tools
+  if (!['alignment', 'shape', 'text', 'crop', 'eraser'].includes(activeTool)) {
+    return null;
+  }
+
+  return (
+    <div
+      className="absolute left-1/2 top-8 -translate-x-1/2 z-50 max-w-md w-full bg-gray-900/90 backdrop-blur-lg rounded-2xl shadow-2xl p-6 flex flex-col gap-6 border border-gray-800 animate-in fade-in slide-in-from-top duration-200"
+      style={{ pointerEvents: 'auto' }}
+    >
+      {/* Header */}
+      <div className="mb-2">
+        <h2 className="text-lg font-semibold text-white tracking-tight mb-1">
+          {activeTool === 'alignment' && 'Text Alignment'}
+          {activeTool === 'shape' && 'Shape Options'}
+          {activeTool === 'text' && 'Text Options'}
+          {activeTool === 'crop' && 'Crop Tool'}
+          {activeTool === 'eraser' && 'Eraser'}
+        </h2>
+        <p className="text-xs text-gray-400">
+          {activeTool === 'alignment' && 'Align your text elements'}
+          {activeTool === 'shape' && 'Choose a shape and color'}
+          {activeTool === 'text' && 'Customize your text'}
+          {activeTool === 'crop' && 'Select an image to crop'}
+          {activeTool === 'eraser' && 'Click elements to delete them'}
+        </p>
+      </div>
+
+>>>>>>> Stashed changes
       {/* Divider */}
       <div className="h-px bg-gray-700 mb-2" />
 
@@ -174,6 +205,7 @@ export default function ToolPanel({
             <Type className="w-4 h-4" /> Text Alignment
           </h3>
           <div className="flex gap-3">
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes
             <Button
               size="icon"
@@ -186,6 +218,14 @@ export default function ToolPanel({
               onClick={() => onAlignmentChange('left')}
               aria-label="Align Left"
 >>>>>>> Stashed changes
+=======
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-400"
+              onClick={() => onAlignmentChange('left')}
+              aria-label="Align Left"
+>>>>>>> Stashed changes
             >
               <AlignLeft className="w-5 h-5" />
             </Button>
@@ -193,8 +233,14 @@ export default function ToolPanel({
               size="icon"
               variant="ghost"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               className="text-white hover:bg-gray-700"
               onClick={() => onAlignmentChange("center")}
+=======
+              className="text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-400"
+              onClick={() => onAlignmentChange('center')}
+              aria-label="Align Center"
+>>>>>>> Stashed changes
 =======
               className="text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-400"
               onClick={() => onAlignmentChange('center')}
@@ -207,8 +253,14 @@ export default function ToolPanel({
               size="icon"
               variant="ghost"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               className="text-white hover:bg-gray-700"
               onClick={() => onAlignmentChange("right")}
+=======
+              className="text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-400"
+              onClick={() => onAlignmentChange('right')}
+              aria-label="Align Right"
+>>>>>>> Stashed changes
 =======
               className="text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-400"
               onClick={() => onAlignmentChange('right')}
@@ -219,9 +271,12 @@ export default function ToolPanel({
             </Button>
           </div>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <div className="grid grid-cols-4 gap-1">
             {colors.map((color) => (
 =======
+=======
+>>>>>>> Stashed changes
         </section>
       )}
 
@@ -274,6 +329,7 @@ export default function ToolPanel({
               />
             ))}
           </div>
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
         </div>
       </div>,
@@ -398,6 +454,43 @@ export default function ToolPanel({
         </section>
       )}
 
+=======
+        </section>
+      )}
+
+      {activeTool === 'text' && (
+        <section>
+          <h4 className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1">
+            <Palette className="w-3 h-3" /> Text Color
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {colors.map(color => (
+              <button
+                key={color}
+                className="w-7 h-7 rounded-full border-2 border-gray-700 hover:border-blue-400 focus:ring-2 focus:ring-blue-400 transition-colors"
+                style={{ backgroundColor: color }}
+                onClick={() => onColorChange(color)}
+                aria-label={`Color ${color}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {activeTool === 'crop' && (
+        <section>
+          <Button
+            size="sm"
+            variant="outline"
+            className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 mt-2"
+            onClick={() => onToolChange('select')}
+          >
+            Cancel
+          </Button>
+        </section>
+      )}
+
+>>>>>>> Stashed changes
       {activeTool === 'eraser' && (
         <section>
           <Button
@@ -412,5 +505,9 @@ export default function ToolPanel({
       )}
     </div>
   );
+<<<<<<< Updated upstream
+}
+>>>>>>> Stashed changes
+=======
 }
 >>>>>>> Stashed changes
