@@ -12,6 +12,7 @@ import {
   Crop,
   Eraser,
 } from "lucide-react";
+import { createPortal } from "react-dom";
 
 interface ToolPanelProps {
   activeTool: string;
@@ -47,8 +48,8 @@ export default function ToolPanel({
   const [cols, setCols] = React.useState(2);
 
   if (activeTool === "alignment") {
-    return (
-      <div className="absolute left-24 top-6 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-50">
+    return createPortal(
+      <div className="absolute left-24 top-32 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-[1000]">
         <h3 className="text-sm font-medium text-white mb-2">Text Alignment</h3>
         <div className="flex gap-2">
           <Button
@@ -76,13 +77,14 @@ export default function ToolPanel({
             <AlignRight className="w-4 h-4" />
           </Button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   if (activeTool === "shape") {
-    return (
-      <div className="absolute left-24 top-6 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-50">
+    return createPortal(
+      <div className="absolute left-24 top-32 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-[1000]">
         <h3 className="text-sm font-medium text-white mb-2">Shapes</h3>
         <div className="grid grid-cols-3 gap-2">
           <Button
@@ -121,13 +123,14 @@ export default function ToolPanel({
             />
           ))}
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   if (activeTool === "text") {
-    return (
-      <div className="absolute left-24 top-6 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-50">
+    return createPortal(
+      <div className="absolute left-24 top-32 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-[1000]">
         <h3 className="text-sm font-medium text-white mb-2">Text Options</h3>
         <div className="space-y-2">
           <div className="flex gap-2">
@@ -167,13 +170,14 @@ export default function ToolPanel({
             ))}
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   if (activeTool === "crop") {
-    return (
-      <div className="absolute left-24 top-6 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-50">
+    return createPortal(
+      <div className="absolute left-24 top-32 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-[1000]">
         <h3 className="text-sm font-medium text-white mb-2">Crop Tool</h3>
         <p className="text-xs text-gray-400 mb-2">Select an image to crop</p>
         <Button
@@ -184,13 +188,14 @@ export default function ToolPanel({
         >
           Cancel
         </Button>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   if (activeTool === "eraser") {
-    return (
-      <div className="absolute left-24 top-6 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-50">
+    return createPortal(
+      <div className="absolute left-24 top-32 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-[1000]">
         <h3 className="text-sm font-medium text-white mb-2">Eraser</h3>
         <p className="text-xs text-gray-400 mb-2">
           Click elements to delete them
@@ -203,13 +208,14 @@ export default function ToolPanel({
         >
           Done
         </Button>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   if (activeTool === "table") {
-    return (
-      <div className="absolute left-24 top-6 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-50">
+    return createPortal(
+      <div className="absolute left-24 top-32 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg z-[1000]">
         <h3 className="text-sm font-medium text-white mb-2">Insert Table</h3>
         <div className="flex gap-2 mb-2">
           <input
@@ -243,7 +249,8 @@ export default function ToolPanel({
         >
           Add Table
         </Button>
-      </div>
+      </div>,
+      document.body
     );
   }
 
