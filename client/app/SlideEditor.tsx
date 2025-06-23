@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,16 +35,26 @@ interface SlideEditorProps {
 export default function SlideEditor({ hasImage, setHasImage, activeTool, currentSlide, onSlideUpdate }: SlideEditorProps) {
   const [dragActive, setDragActive] = useState(false);
   const [showSlide, setShowSlide] = useState(false);
-  const [slideTitle, setSlideTitle] = useState(currentSlide?.title || 'Untitled Slide');
+  const [slideTitle, setSlideTitle] = useState('');
   const [editingElement, setEditingElement] = useState<string | null>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const slideRef = useRef<HTMLDivElement>(null);
+
+  // Update local state when currentSlide changes
+  useEffect(() => {
+    if (currentSlide) {
+      setSlideTitle(currentSlide.title);
+      setShowSlide(true);
+      setHasImage(true);
+    }
+  }, [currentSlide, setHasImage]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       setHasImage(true);
       setShowSlide(true);
       // Handle file upload logic here
+      console.log('Files dropped:', acceptedFiles);
     }
   }, [setHasImage]);
 
@@ -73,14 +83,14 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
     if (!currentSlide) return;
 
     const newElement: SlideElement = {
-      id: `element_${Date.now()}`,
+      id: `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type,
       content: type === 'text' ? 'Click to edit text' : type === 'shape' ? 'rectangle' : '',
       x,
       y,
       width: type === 'text' ? 200 : 100,
       height: type === 'text' ? 40 : 100,
-      style: type === 'shape' ? { backgroundColor: '#3b82f6' } : {}
+      style: type === 'shape' ? { backgroundColor: '#3b82f6', borderRadius: '4px' } : {}
     };
 
     updateSlide({
@@ -108,26 +118,39 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
   };
 
   const handleSlideClick = (e: React.MouseEvent) => {
+    if (!slideRef.current) return;
+    
+    const rect = slideRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Deselect element if clicking on empty space
+    setSelectedElement(null);
+
     if (activeTool === 'text') {
-      const rect = slideRef.current?.getBoundingClientRect();
-      if (rect) {
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        addElement('text', x, y);
-      }
+      addElement('text', x - 100, y - 20); // Center the text element
     } else if (activeTool === 'shape') {
-      const rect = slideRef.current?.getBoundingClientRect();
-      if (rect) {
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        addElement('shape', x, y);
-      }
+      addElement('shape', x - 50, y - 50); // Center the shape element
     }
   };
 
   const handleTitleUpdate = (newTitle: string) => {
     setSlideTitle(newTitle);
     updateSlide({ title: newTitle });
+  };
+
+  const handleElementClick = (e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    setSelectedElement(elementId);
+  };
+
+  const handleElementDoubleClick = (elementId: string) => {
+    setEditingElement(elementId);
+  };
+
+  const handleElementEdit = (elementId: string, newContent: string) => {
+    updateElement(elementId, { content: newContent });
+    setEditingElement(null);
   };
 
   if (hasImage || showSlide) {
@@ -137,21 +160,21 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
           {/* Slide Container */}
           <div 
             ref={slideRef}
-            className="relative bg-white rounded-lg shadow-2xl cursor-crosshair" 
+            className="relative bg-white rounded-lg shadow-2xl overflow-hidden" 
             style={{ width: '960px', height: '540px', aspectRatio: '16/9' }}
             onClick={handleSlideClick}
           >
             {/* Slide Content */}
-            <div className="w-full h-full p-12 flex flex-col">
+            <div className="w-full h-full p-12 flex flex-col relative">
               {/* Title Area */}
-              <div className="mb-8">
+              <div className="mb-8 relative z-10">
                 <div className="w-full h-16 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-text hover:border-blue-400 transition-colors">
                   <div className="flex items-center gap-2 text-gray-500 w-full px-4">
                     <Type className="w-5 h-5" />
                     <Input
                       value={slideTitle}
                       onChange={(e) => handleTitleUpdate(e.target.value)}
-                      className="border-none bg-transparent text-lg font-semibold text-gray-800 focus:outline-none"
+                      className="border-none bg-transparent text-lg font-semibold text-gray-800 focus:outline-none shadow-none"
                       placeholder="Click to add title"
                     />
                   </div>
@@ -162,35 +185,38 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
               {currentSlide?.elements?.map((element) => (
                 <div
                   key={element.id}
-                  className={`absolute border-2 ${selectedElement === element.id ? 'border-blue-500' : 'border-transparent'} hover:border-blue-300 cursor-pointer`}
+                  className={`absolute border-2 ${selectedElement === element.id ? 'border-blue-500 bg-blue-50/20' : 'border-transparent hover:border-blue-300'} cursor-pointer transition-all`}
                   style={{
                     left: element.x,
                     top: element.y,
                     width: element.width,
                     height: element.height,
+                    zIndex: selectedElement === element.id ? 20 : 10,
                     ...element.style
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedElement(element.id);
-                  }}
+                  onClick={(e) => handleElementClick(e, element.id)}
+                  onDoubleClick={() => handleElementDoubleClick(element.id)}
                 >
                   {element.type === 'text' && (
-                    <div className="w-full h-full flex items-center">
+                    <div className="w-full h-full flex items-center p-2">
                       {editingElement === element.id ? (
                         <Input
                           value={element.content}
                           onChange={(e) => updateElement(element.id, { content: e.target.value })}
                           onBlur={() => setEditingElement(null)}
-                          onKeyDown={(e) => e.key === 'Enter' && setEditingElement(null)}
-                          className="w-full h-full border-none bg-transparent text-gray-800"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              setEditingElement(null);
+                            }
+                            if (e.key === 'Escape') {
+                              setEditingElement(null);
+                            }
+                          }}
+                          className="w-full h-full border-none bg-transparent text-gray-800 p-0 shadow-none"
                           autoFocus
                         />
                       ) : (
-                        <span 
-                          className="text-gray-800 w-full"
-                          onDoubleClick={() => setEditingElement(element.id)}
-                        >
+                        <span className="text-gray-800 w-full break-words">
                           {element.content}
                         </span>
                       )}
@@ -198,7 +224,7 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
                   )}
                   
                   {element.type === 'shape' && (
-                    <div className="w-full h-full rounded" style={element.style}></div>
+                    <div className="w-full h-full" style={element.style}></div>
                   )}
 
                   {element.type === 'image' && (
@@ -209,11 +235,11 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
 
                   {/* Element Controls */}
                   {selectedElement === element.id && (
-                    <div className="absolute -top-8 right-0 flex gap-1">
+                    <div className="absolute -top-8 right-0 flex gap-1 z-30">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 bg-blue-500 hover:bg-blue-600 text-white"
+                        className="h-6 w-6 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded"
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingElement(element.id);
@@ -224,7 +250,7 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 bg-red-500 hover:bg-red-600 text-white"
+                        className="h-6 w-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded"
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteElement(element.id);
@@ -239,7 +265,7 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
 
               {/* Default Content Areas (only show if no custom elements) */}
               {(!currentSlide?.elements || currentSlide.elements.length === 0) && (
-                <div className="flex-1 grid grid-cols-2 gap-8">
+                <div className="flex-1 grid grid-cols-2 gap-8 relative z-10">
                   {/* Left Content */}
                   <div className="space-y-4">
                     <div 
@@ -299,7 +325,7 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
               )}
 
               {/* Footer/Notes Area */}
-              <div className="mt-8">
+              <div className="mt-8 relative z-10">
                 <div className="w-full h-8 bg-gray-50 rounded border border-gray-200 flex items-center px-3">
                   <span className="text-xs text-gray-400">Slide notes (optional)</span>
                 </div>
@@ -307,13 +333,13 @@ export default function SlideEditor({ hasImage, setHasImage, activeTool, current
             </div>
 
             {/* Slide Number */}
-            <div className="absolute bottom-4 right-4 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">
+            <div className="absolute bottom-4 right-4 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded z-20">
               Slide {currentSlide?.id || 1}
             </div>
 
             {/* Tool Instructions */}
             {activeTool !== 'select' && (
-              <div className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded text-sm">
+              <div className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded text-sm z-20">
                 {activeTool === 'text' && 'Click to add text'}
                 {activeTool === 'shape' && 'Click to add shape'}
                 {activeTool === 'brush' && 'Draw on the slide'}

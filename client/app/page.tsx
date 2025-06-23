@@ -35,22 +35,41 @@ const tools = [
   { id: 'frame', icon: Frame, label: 'Frame' },
 ];
 
+interface SlideElement {
+  id: string;
+  type: 'text' | 'image' | 'shape';
+  content: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  style?: any;
+}
+
+interface Slide {
+  id: number;
+  title: string;
+  content: string;
+  elements: SlideElement[];
+}
+
 export default function Home() {
   const [activeTool, setActiveTool] = useState('select');
   const [showAI, setShowAI] = useState(true);
   const [hasImage, setHasImage] = useState(false);
 
   // Slides state management
-  const [slides, setSlides] = useState([
+  const [slides, setSlides] = useState<Slide[]>([
     { id: 1, title: 'Untitled Slide', content: '', elements: [] }
   ]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [presentationId, setPresentationId] = useState(null);
+  const [presentationId, setPresentationId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Handler: New Slide
   const handleNewSlide = () => {
-    const newSlide = {
+    const newSlide: Slide = {
       id: slides.length + 1,
       title: `Slide ${slides.length + 1}`,
       content: '',
@@ -68,37 +87,133 @@ export default function Home() {
       const response = await fetch('http://localhost:5000/api/presentai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: 'Manual save', slides }),
+        body: JSON.stringify({ 
+          prompt: 'Manual save', 
+          slides: slides.map(slide => ({
+            title: slide.title,
+            content: slide.content
+          }))
+        }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save presentation');
+      }
+      
       const data = await response.json();
       if (data.presentation_id) {
         setPresentationId(data.presentation_id);
-        alert('Presentation saved!');
+        alert('Presentation saved successfully!');
       } else {
         alert('Failed to save presentation.');
       }
     } catch (err) {
-      alert('Error saving presentation.');
+      console.error('Save error:', err);
+      alert('Error saving presentation. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
   // Handler: Export Presentation
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!presentationId) {
       alert('Please save your presentation first!');
       return;
     }
-    // TODO: Implement export logic when backend is ready
-    alert('Export to PPTX is not implemented yet.');
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/presentations/${presentationId}/export`);
+      if (!response.ok) {
+        throw new Error('Failed to export presentation');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `presentation_${presentationId}.pptx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      alert('Presentation exported successfully!');
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Error exporting presentation. Please try again.');
+    }
   };
 
   // Handler: Tool selection
   const handleToolSelect = (toolId: string) => {
     setActiveTool(toolId);
-    // Add tool-specific logic here
     console.log(`Selected tool: ${toolId}`);
+  };
+
+  // Handler: Update current slide
+  const handleSlideUpdate = (updatedSlide: Slide) => {
+    setSlides(prev => prev.map((slide, index) => 
+      index === currentSlide ? updatedSlide : slide
+    ));
+  };
+
+  // Handler: Generate slides from AI
+  const handleGenerateSlides = async (prompt: string) => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/presentai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate presentation');
+      }
+      
+      const data = await response.json();
+      
+      if (data.slides && data.slides.length > 0) {
+        const newSlides: Slide[] = data.slides.map((slide: any, index: number) => ({
+          id: index + 1,
+          title: slide.title || `Slide ${index + 1}`,
+          content: slide.content || '',
+          elements: []
+        }));
+        
+        setSlides(newSlides);
+        setCurrentSlide(0);
+        setPresentationId(data.presentation_id);
+        setHasImage(true);
+        
+        alert('Presentation generated successfully!');
+      } else {
+        alert('No slides were generated. Please try a different prompt.');
+      }
+    } catch (err) {
+      console.error('Generation error:', err);
+      alert('Error generating presentation. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Handler: Delete slide
+  const handleDeleteSlide = () => {
+    if (slides.length <= 1) {
+      alert('Cannot delete the last slide');
+      return;
+    }
+    
+    const newSlides = slides.filter((_, index) => index !== currentSlide);
+    setSlides(newSlides);
+    
+    // Adjust current slide index
+    if (currentSlide >= newSlides.length) {
+      setCurrentSlide(newSlides.length - 1);
+    }
   };
 
   return (
@@ -122,7 +237,7 @@ export default function Home() {
               <select 
                 value={currentSlide} 
                 onChange={(e) => setCurrentSlide(Number(e.target.value))}
-                className="bg-gray-700 border-gray-600 rounded px-2 py-1 text-sm"
+                className="bg-gray-700 border-gray-600 rounded px-2 py-1 text-sm text-white"
               >
                 {slides.map((slide, index) => (
                   <option key={slide.id} value={index}>
@@ -130,6 +245,16 @@ export default function Home() {
                   </option>
                 ))}
               </select>
+              {slides.length > 1 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  onClick={handleDeleteSlide}
+                >
+                  Delete
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -143,7 +268,7 @@ export default function Home() {
             <Save className="w-4 h-4 mr-2" />
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
-          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600" onClick={handleExport}>
+          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600" onClick={handleExport} disabled={!presentationId}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
@@ -189,6 +314,8 @@ export default function Home() {
             hasImage={hasImage} 
             setHasImage={setHasImage}
             activeTool={activeTool}
+            currentSlide={slides[currentSlide]}
+            onSlideUpdate={handleSlideUpdate}
           />
         </div>
 
@@ -209,19 +336,34 @@ export default function Home() {
             </div>
 
             <div className="flex-1 p-4">
-              <PromptInput />
+              <PromptInput 
+                onGenerate={handleGenerateSlides}
+                isGenerating={isGenerating}
+              />
             </div>
 
             <div className="p-4 border-t border-gray-700">
               <h3 className="text-sm font-medium mb-3">Quick Inspirations</h3>
               <div className="space-y-2">
-                <button className="w-full text-left p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors text-sm">
+                <button 
+                  className="w-full text-left p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors text-sm"
+                  onClick={() => handleGenerateSlides("Business presentation with sales statistics data")}
+                  disabled={isGenerating}
+                >
                   Business presentation with sales statistics data
                 </button>
-                <button className="w-full text-left p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors text-sm">
+                <button 
+                  className="w-full text-left p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors text-sm"
+                  onClick={() => handleGenerateSlides("Marketing strategy deck with growth metrics")}
+                  disabled={isGenerating}
+                >
                   Marketing strategy deck with growth metrics
                 </button>
-                <button className="w-full text-left p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors text-sm">
+                <button 
+                  className="w-full text-left p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors text-sm"
+                  onClick={() => handleGenerateSlides("Product launch presentation with timeline")}
+                  disabled={isGenerating}
+                >
                   Product launch presentation with timeline
                 </button>
               </div>
