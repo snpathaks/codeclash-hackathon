@@ -51,10 +51,8 @@ export default function SlideEditor({
     if (currentSlide) {
       setSlideTitle(currentSlide.title);
       setSlideNotes(currentSlide.notes || '');
-      setShowSlide(true);
-      setHasImage(true);
     }
-  }, [currentSlide, setHasImage]);
+  }, [currentSlide]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
