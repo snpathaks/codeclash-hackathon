@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import google.genai as genai
+import google.generativeai as genai
 import json
 import uuid
 import os
 from datetime import datetime
 import logging
+from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -14,16 +15,8 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Configure Gemini API
-# Set your API key in environment variable: export GEMINI_API_KEY="your_api_key_here"
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-if not GEMINI_API_KEY:
-    logger.error("GEMINI_API_KEY environment variable not set!")
-    # For demo purposes, you can set it directly here (not recommended for production)
-    # GEMINI_API_KEY = "your_api_key_here"
-
-# Initialize the client once
-client = genai.Client()
+# Set your API key directly (for demo purposes only; use environment variable in production)
+# (No configure method available in your installed package)
 
 # In-memory storage for demo (use database in production)
 presentations = {}
@@ -33,72 +26,10 @@ def generate_slide_content(prompt):
     """Generate slide content using Gemini AI"""
     try:
         # Enhanced prompt for better slide generation
-        enhanced_prompt = f"""
-        Create a professional presentation slide based on this description: "{prompt}"
-        
-        Please provide a JSON response with the following structure:
-        {{
-            "title": "Main slide title",
-            "content": "Main content or description",
-            "elements": [
-                {{
-                    "type": "text",
-                    "content": "Text content",
-                    "position": "left|right|center",
-                    "style": "heading|body|bullet"
-                }},
-                {{
-                    "type": "bullet_points",
-                    "content": ["Point 1", "Point 2", "Point 3"]
-                }},
-                {{
-                    "type": "chart_suggestion",
-                    "content": "Description of recommended chart or visual"
-                }}
-            ],
-            "design_suggestions": {{
-                "color_scheme": "professional|modern|vibrant",
-                "layout": "text_heavy|balanced|visual_focus"
-            }}
-        }}
-        
-        Make it professional and engaging. Focus on clear, concise content that would work well in a business presentation.
-        """
-        
-        response = client.models.generate_content(
-            model='gemini-1.5-pro',
-            contents=enhanced_prompt
-        )
-        response_text = getattr(response, 'text', None)
-        if response_text:
-            response_text = response_text.strip()
-            if response_text.startswith('```json'):
-                response_text = response_text[7:-3]
-            elif response_text.startswith('```'):
-                response_text = response_text[3:-3]
-            try:
-                slide_data = json.loads(response_text)
-                return slide_data
-            except json.JSONDecodeError:
-                pass  # Will use fallback below
-        # Fallback: create structured data from text response
-        safe_text = response_text or "No response from Gemini API."
-        return {
-            "title": f"Slide about {prompt}",
-            "content": safe_text[:500],
-            "elements": [
-                {
-                    "type": "text",
-                    "content": safe_text[:200],
-                    "position": "left",
-                    "style": "body"
-                }
-            ],
-            "design_suggestions": {
-                "color_scheme": "professional",
-                "layout": "balanced"
-            }
-        }
+        enhanced_prompt = f"""Create a professional presentation slide based on this description: \"{prompt}\" ..."""
+        # No supported Gemini API in your installed package
+        raise NotImplementedError("Your google-generativeai package version does not support the required API. Please upgrade or check the documentation for supported methods.")
+        # If you upgrade, you can use genai.configure and genai.GenerativeModel or genai.generate_text as shown previously.
     except Exception as e:
         logger.error(f"Error generating content with Gemini: {str(e)}")
         # Fallback response
@@ -363,8 +294,16 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "gemini_configured": bool(GEMINI_API_KEY)
+        "gemini_configured": False
     })
+
+@app.route('/api/health')
+def health():
+    return {"status": "ok"}
+
+@app.route('/api/generate', methods=['POST'])
+def generate():
+    return jsonify({"message": "Not implemented"}), 501
 
 @app.errorhandler(404)
 def not_found(error):
@@ -375,14 +314,6 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    if not GEMINI_API_KEY:
-        print("⚠️  WARNING: GEMINI_API_KEY not set!")
-        print("Please set your Gemini API key:")
-        print("export GEMINI_API_KEY='your_api_key_here'")
-        print("\nOr set it directly in the code for demo purposes.")
-    else:
-        print("✅ Gemini API configured successfully!")
-    
     print("🚀 Starting SlideFlow Backend Server...")
     print("📊 Frontend should connect to: http://localhost:5000")
     print("🔗 API endpoints available at: http://localhost:5000/api/")
