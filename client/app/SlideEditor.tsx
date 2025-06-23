@@ -1,23 +1,23 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Upload, 
-  Image as ImageIcon, 
-  Plus, 
-  Sparkles, 
-  Type, 
-  Square, 
-  Circle, 
-  X, 
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useDropzone } from "react-dropzone";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Upload,
+  Image as ImageIcon,
+  Plus,
+  Sparkles,
+  Type,
+  Square,
+  Circle,
+  X,
   Edit2,
   Triangle,
   Move,
-  List
-} from 'lucide-react';
-import { Slide, SlideElement } from '@/types/slide';
+  List,
+} from "lucide-react";
+import { Slide, SlideElement } from "@/types/slide";
 
 interface SlideEditorProps {
   hasImage: boolean;
@@ -28,18 +28,18 @@ interface SlideEditorProps {
   onToolChange?: (tool: string) => void;
 }
 
-export default function SlideEditor({ 
-  hasImage, 
-  setHasImage, 
-  activeTool, 
-  currentSlide, 
+export default function SlideEditor({
+  hasImage,
+  setHasImage,
+  activeTool,
+  currentSlide,
   onSlideUpdate,
-  onToolChange 
+  onToolChange,
 }: SlideEditorProps) {
   const [dragActive, setDragActive] = useState(false);
   const [showSlide, setShowSlide] = useState(false);
-  const [slideTitle, setSlideTitle] = useState('');
-  const [slideNotes, setSlideNotes] = useState('');
+  const [slideTitle, setSlideTitle] = useState("");
+  const [slideNotes, setSlideNotes] = useState("");
   const [editingElement, setEditingElement] = useState<string | null>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [draggedElement, setDraggedElement] = useState<string | null>(null);
@@ -50,28 +50,31 @@ export default function SlideEditor({
   useEffect(() => {
     if (currentSlide) {
       setSlideTitle(currentSlide.title);
-      setSlideNotes(currentSlide.notes || '');
+      setSlideNotes(currentSlide.notes || "");
     }
   }, [currentSlide]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
-        addElement('image', 100, 100, { imageUrl });
-      };
-      reader.readAsDataURL(file);
-      setHasImage(true);
-      setShowSlide(true);
-    }
-  }, [setHasImage]);
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (acceptedFiles.length > 0) {
+        const file = acceptedFiles[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          addElement("image", 100, 100, { imageUrl });
+        };
+        reader.readAsDataURL(file);
+        setHasImage(true);
+        setShowSlide(true);
+      }
+    },
+    [setHasImage]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
     },
     multiple: false,
     onDragEnter: () => setDragActive(true),
@@ -90,43 +93,48 @@ export default function SlideEditor({
   };
 
   const addElement = (
-    type: 'text' | 'image' | 'shape' | 'bulletList', 
-    x: number = 100, 
-    y: number = 100, 
+    type: "text" | "image" | "shape" | "bulletList",
+    x: number = 100,
+    y: number = 100,
     extraProps: any = {}
   ) => {
     if (!currentSlide) return;
 
-    let content = 'Click to edit text';
+    let content = "Click to edit text";
     let width = 200;
     let height = 40;
     let style: any = {};
 
     switch (type) {
-      case 'text':
-        content = 'Click to edit text';
-        style = { fontSize: '16px', textAlign: 'left', color: '#1f2937' };
+      case "text":
+        content = "Click to edit text";
+        style = { fontSize: "16px", textAlign: "left", color: "#1f2937" };
         break;
-      case 'bulletList':
-        content = 'Bullet point 1\nBullet point 2\nBullet point 3';
+      case "bulletList":
+        content = "Bullet point 1\nBullet point 2\nBullet point 3";
         height = 80;
-        style = { fontSize: '14px', textAlign: 'left', color: '#1f2937', listItems: ['Bullet point 1', 'Bullet point 2', 'Bullet point 3'] };
-        break;
-      case 'shape':
-        content = 'rectangle';
-        width = 100;
-        height = 100;
-        style = { 
-          backgroundColor: '#3b82f6', 
-          borderRadius: '4px',
-          shapeType: 'rectangle'
+        style = {
+          fontSize: "14px",
+          textAlign: "left",
+          color: "#1f2937",
+          listItems: ["Bullet point 1", "Bullet point 2", "Bullet point 3"],
         };
         break;
-      case 'image':
-        content = '';
+      case "shape":
+        content = "rectangle";
+        width = 100;
+        height = 100;
+        style = {
+          backgroundColor: "#3b82f6",
+          borderRadius: "4px",
+          shapeType: "rectangle",
+        };
+        break;
+      case "image":
+        content = "";
         width = 150;
         height = 150;
-        style = { imageUrl: extraProps.imageUrl || '' };
+        style = { imageUrl: extraProps.imageUrl || "" };
         break;
     }
 
@@ -138,11 +146,11 @@ export default function SlideEditor({
       y,
       width,
       height,
-      style: { ...style, ...extraProps }
+      style: { ...style, ...extraProps },
     };
 
     updateSlide({
-      elements: [...(currentSlide.elements || []), newElement]
+      elements: [...(currentSlide.elements || []), newElement],
     });
   };
 
@@ -150,9 +158,9 @@ export default function SlideEditor({
     if (!currentSlide) return;
 
     updateSlide({
-      elements: currentSlide.elements.map(el => 
+      elements: currentSlide.elements.map((el) =>
         el.id === elementId ? { ...el, ...updates } : el
-      )
+      ),
     });
   };
 
@@ -160,14 +168,14 @@ export default function SlideEditor({
     if (!currentSlide) return;
 
     updateSlide({
-      elements: currentSlide.elements.filter(el => el.id !== elementId)
+      elements: currentSlide.elements.filter((el) => el.id !== elementId),
     });
     setSelectedElement(null);
   };
 
   const handleSlideClick = (e: React.MouseEvent) => {
     if (!slideRef.current) return;
-    
+
     const rect = slideRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -175,12 +183,12 @@ export default function SlideEditor({
     // Deselect element if clicking on empty space
     setSelectedElement(null);
 
-    if (activeTool === 'text') {
-      addElement('text', x - 100, y - 20);
-      onToolChange?.('select');
-    } else if (activeTool === 'shape') {
-      addElement('shape', x - 50, y - 50);
-      onToolChange?.('select');
+    if (activeTool === "text") {
+      addElement("text", x - 100, y - 20);
+      onToolChange?.("select");
+    } else if (activeTool === "shape") {
+      addElement("shape", x - 50, y - 50);
+      onToolChange?.("select");
     }
   };
 
@@ -196,31 +204,31 @@ export default function SlideEditor({
 
   const handleElementClick = (e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
-    
-    if (activeTool === 'eraser') {
+
+    if (activeTool === "eraser") {
       deleteElement(elementId);
       return;
     }
-    
+
     setSelectedElement(elementId);
   };
 
   const handleElementDoubleClick = (elementId: string) => {
-    if (activeTool === 'select') {
+    if (activeTool === "select") {
       setEditingElement(elementId);
     }
   };
 
   const handleMouseDown = (e: React.MouseEvent, elementId: string) => {
-    if (activeTool === 'select') {
+    if (activeTool === "select") {
       setDraggedElement(elementId);
-      const element = currentSlide?.elements.find(el => el.id === elementId);
+      const element = currentSlide?.elements.find((el) => el.id === elementId);
       if (element) {
         const rect = slideRef.current?.getBoundingClientRect();
         if (rect) {
           setDragOffset({
             x: e.clientX - rect.left - element.x,
-            y: e.clientY - rect.top - element.y
+            y: e.clientY - rect.top - element.y,
           });
         }
       }
@@ -232,7 +240,7 @@ export default function SlideEditor({
       const rect = slideRef.current.getBoundingClientRect();
       const newX = e.clientX - rect.left - dragOffset.x;
       const newY = e.clientY - rect.top - dragOffset.y;
-      
+
       updateElement(draggedElement, { x: newX, y: newY });
     }
   };
@@ -243,32 +251,34 @@ export default function SlideEditor({
   };
 
   const renderShape = (element: SlideElement) => {
-    const { shapeType = 'rectangle' } = element.style || {};
-    
-    if (shapeType === 'circle') {
+    const { shapeType = "rectangle" } = element.style || {};
+
+    if (shapeType === "circle") {
       return (
-        <div 
-          className="w-full h-full rounded-full" 
-          style={{ backgroundColor: element.style?.backgroundColor || '#3b82f6' }}
+        <div
+          className="w-full h-full rounded-full"
+          style={{
+            backgroundColor: element.style?.backgroundColor || "#3b82f6",
+          }}
         />
       );
-    } else if (shapeType === 'triangle') {
+    } else if (shapeType === "triangle") {
       return (
-        <div 
+        <div
           className="w-full h-full flex items-center justify-center"
-          style={{ 
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-            backgroundColor: element.style?.backgroundColor || '#3b82f6'
+          style={{
+            clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
+            backgroundColor: element.style?.backgroundColor || "#3b82f6",
           }}
         />
       );
     } else {
       return (
-        <div 
-          className="w-full h-full" 
-          style={{ 
-            backgroundColor: element.style?.backgroundColor || '#3b82f6',
-            borderRadius: element.style?.borderRadius || '4px'
+        <div
+          className="w-full h-full"
+          style={{
+            backgroundColor: element.style?.backgroundColor || "#3b82f6",
+            borderRadius: element.style?.borderRadius || "4px",
           }}
         />
       );
@@ -280,10 +290,10 @@ export default function SlideEditor({
       <div className="flex-1 p-8 flex flex-col items-center justify-center">
         <div className="w-full max-w-5xl h-full flex flex-col items-center justify-center">
           {/* Slide Container */}
-          <div 
+          <div
             ref={slideRef}
-            className="relative bg-white rounded-lg shadow-2xl overflow-hidden mb-4" 
-            style={{ width: '960px', height: '540px', aspectRatio: '16/9' }}
+            className="relative bg-white rounded-lg shadow-2xl overflow-hidden mb-4"
+            style={{ width: "960px", height: "540px", aspectRatio: "16/9" }}
             onClick={handleSlideClick}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -310,11 +320,11 @@ export default function SlideEditor({
                 <div
                   key={element.id}
                   className={`absolute border-2 ${
-                    selectedElement === element.id 
-                      ? 'border-blue-500 bg-blue-50/20' 
-                      : activeTool === 'eraser'
-                      ? 'border-red-300 hover:border-red-500 hover:bg-red-50/20'
-                      : 'border-transparent hover:border-blue-300'
+                    selectedElement === element.id
+                      ? "border-blue-500 bg-blue-50/20"
+                      : activeTool === "eraser"
+                      ? "border-red-300 hover:border-red-500 hover:bg-red-50/20"
+                      : "border-transparent hover:border-blue-300"
                   } cursor-pointer transition-all`}
                   style={{
                     left: element.x,
@@ -327,36 +337,40 @@ export default function SlideEditor({
                   onDoubleClick={() => handleElementDoubleClick(element.id)}
                   onMouseDown={(e) => handleMouseDown(e, element.id)}
                 >
-                  {element.type === 'text' && (
+                  {element.type === "text" && (
                     <div className="w-full h-full flex items-center p-2">
                       {editingElement === element.id ? (
                         <Input
                           value={element.content}
-                          onChange={(e) => updateElement(element.id, { content: e.target.value })}
+                          onChange={(e) =>
+                            updateElement(element.id, {
+                              content: e.target.value,
+                            })
+                          }
                           onBlur={() => setEditingElement(null)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                            if (e.key === "Enter") {
                               setEditingElement(null);
                             }
-                            if (e.key === 'Escape') {
+                            if (e.key === "Escape") {
                               setEditingElement(null);
                             }
                           }}
                           className="w-full h-full border-none bg-transparent text-gray-800 p-0 shadow-none"
-                          style={{ 
-                            fontSize: element.style?.fontSize || '16px',
-                            textAlign: element.style?.textAlign || 'left',
-                            color: element.style?.color || '#1f2937'
+                          style={{
+                            fontSize: element.style?.fontSize || "16px",
+                            textAlign: element.style?.textAlign || "left",
+                            color: element.style?.color || "#1f2937",
                           }}
                           autoFocus
                         />
                       ) : (
-                        <span 
+                        <span
                           className="w-full break-words"
-                          style={{ 
-                            fontSize: element.style?.fontSize || '16px',
-                            textAlign: element.style?.textAlign || 'left',
-                            color: element.style?.color || '#1f2937'
+                          style={{
+                            fontSize: element.style?.fontSize || "16px",
+                            textAlign: element.style?.textAlign || "left",
+                            color: element.style?.color || "#1f2937",
                           }}
                         >
                           {element.content}
@@ -365,28 +379,32 @@ export default function SlideEditor({
                     </div>
                   )}
 
-                  {element.type === 'bulletList' && (
+                  {element.type === "bulletList" && (
                     <div className="w-full h-full p-2">
                       {editingElement === element.id ? (
                         <Textarea
                           value={element.content}
-                          onChange={(e) => updateElement(element.id, { content: e.target.value })}
+                          onChange={(e) =>
+                            updateElement(element.id, {
+                              content: e.target.value,
+                            })
+                          }
                           onBlur={() => setEditingElement(null)}
                           className="w-full h-full border-none bg-transparent text-gray-800 p-0 shadow-none resize-none"
-                          style={{ 
-                            fontSize: element.style?.fontSize || '14px',
-                            color: element.style?.color || '#1f2937'
+                          style={{
+                            fontSize: element.style?.fontSize || "14px",
+                            color: element.style?.color || "#1f2937",
                           }}
                           autoFocus
                         />
                       ) : (
                         <ul className="list-disc list-inside space-y-1">
-                          {element.content.split('\n').map((item, index) => (
-                            <li 
+                          {element.content.split("\n").map((item, index) => (
+                            <li
                               key={index}
-                              style={{ 
-                                fontSize: element.style?.fontSize || '14px',
-                                color: element.style?.color || '#1f2937'
+                              style={{
+                                fontSize: element.style?.fontSize || "14px",
+                                color: element.style?.color || "#1f2937",
                               }}
                             >
                               {item}
@@ -396,15 +414,15 @@ export default function SlideEditor({
                       )}
                     </div>
                   )}
-                  
-                  {element.type === 'shape' && renderShape(element)}
 
-                  {element.type === 'image' && (
+                  {element.type === "shape" && renderShape(element)}
+
+                  {element.type === "image" && (
                     <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center overflow-hidden">
                       {element.style?.imageUrl ? (
-                        <img 
-                          src={element.style.imageUrl} 
-                          alt="Slide content" 
+                        <img
+                          src={element.style.imageUrl}
+                          alt="Slide content"
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -414,52 +432,55 @@ export default function SlideEditor({
                   )}
 
                   {/* Element Controls */}
-                  {selectedElement === element.id && activeTool === 'select' && (
-                    <div className="absolute -top-8 right-0 flex gap-1 z-30">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingElement(element.id);
-                        }}
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteElement(element.id);
-                        }}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  )}
+                  {selectedElement === element.id &&
+                    activeTool === "select" && (
+                      <div className="absolute -top-8 right-0 flex gap-1 z-30">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingElement(element.id);
+                          }}
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteElement(element.id);
+                          }}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
 
                   {/* Drag Handle */}
-                  {selectedElement === element.id && activeTool === 'select' && (
-                    <div className="absolute -top-2 -left-2 w-4 h-4 bg-blue-500 rounded-full cursor-move z-30">
-                      <Move className="w-3 h-3 text-white p-0.5" />
-                    </div>
-                  )}
+                  {selectedElement === element.id &&
+                    activeTool === "select" && (
+                      <div className="absolute -top-2 -left-2 w-4 h-4 bg-blue-500 rounded-full cursor-move z-30">
+                        <Move className="w-3 h-3 text-white p-0.5" />
+                      </div>
+                    )}
                 </div>
               ))}
 
               {/* Default Content Areas (only show if no custom elements) */}
-              {(!currentSlide?.elements || currentSlide.elements.length === 0) && (
+              {(!currentSlide?.elements ||
+                currentSlide.elements.length === 0) && (
                 <div className="flex-1 grid grid-cols-2 gap-8 relative z-10">
                   {/* Left Content */}
                   <div className="space-y-4">
-                    <div 
+                    <div
                       className="h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-text hover:border-blue-400 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
-                        addElement('text', 50, 150);
+                        addElement("text", 50, 150);
                       }}
                     >
                       <div className="flex items-center gap-2 text-gray-500">
@@ -467,11 +488,11 @@ export default function SlideEditor({
                         <span>Add content</span>
                       </div>
                     </div>
-                    <div 
+                    <div
                       className="h-20 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-blue-400 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
-                        addElement('shape', 50, 300);
+                        addElement("shape", 50, 300);
                       }}
                     >
                       <div className="flex items-center gap-2 text-gray-500">
@@ -483,11 +504,11 @@ export default function SlideEditor({
 
                   {/* Right Content */}
                   <div className="space-y-4">
-                    <div 
+                    <div
                       className="h-40 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-blue-400 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
-                        addElement('image', 500, 150);
+                        addElement("image", 500, 150);
                       }}
                     >
                       <div className="flex flex-col items-center gap-2 text-gray-500">
@@ -495,11 +516,11 @@ export default function SlideEditor({
                         <span>Add image or chart</span>
                       </div>
                     </div>
-                    <div 
+                    <div
                       className="h-12 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-text hover:border-blue-400 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
-                        addElement('bulletList', 500, 350);
+                        addElement("bulletList", 500, 350);
                       }}
                     >
                       <div className="flex items-center gap-2 text-gray-500">
@@ -517,14 +538,14 @@ export default function SlideEditor({
               </div>
 
               {/* Tool Instructions */}
-              {activeTool !== 'select' && (
+              {activeTool !== "select" && (
                 <div className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded text-sm z-20">
-                  {activeTool === 'text' && 'Click to add text'}
-                  {activeTool === 'shape' && 'Click to add shape'}
-                  {activeTool === 'alignment' && 'Select text to align'}
-                  {activeTool === 'crop' && 'Select image to crop'}
-                  {activeTool === 'eraser' && 'Click elements to delete'}
-                  {activeTool === 'frame' && 'Click to add frame'}
+                  {activeTool === "text" && "Click to add text"}
+                  {activeTool === "shape" && "Click to add shape"}
+                  {activeTool === "alignment" && "Select text to align"}
+                  {activeTool === "crop" && "Select image to crop"}
+                  {activeTool === "eraser" && "Click elements to delete"}
+                  {activeTool === "frame" && "Click to add frame"}
                 </div>
               )}
             </div>
@@ -533,7 +554,9 @@ export default function SlideEditor({
           {/* Slide Notes */}
           <div className="w-full max-w-5xl">
             <div className="bg-gray-100 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Slide Notes</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                Slide Notes
+              </h3>
               <Textarea
                 value={slideNotes}
                 onChange={(e) => handleNotesUpdate(e.target.value)}
@@ -551,51 +574,55 @@ export default function SlideEditor({
     <div className="flex-1 p-8 flex items-center justify-center">
       <div className="w-full max-w-md">
         <div
-          {...getRootProps()}
           className={`
             border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-200
-            ${isDragActive || dragActive
-              ? 'border-blue-500 bg-blue-500/10'
-              : 'border-gray-600 hover:border-gray-500'
+            ${
+              isDragActive || dragActive
+                ? "border-blue-500 bg-blue-500/10"
+                : "border-gray-600 hover:border-gray-500"
             }
           `}
         >
-          <input {...getInputProps()} />
-          
-          <div className="w-12 h-12 flex items-center justify-center mx-auto mb-6">
-            <Sparkles className="w-8 h-8 text-orange-400" />
+          {/* Drag-and-drop area only */}
+          <div {...getRootProps()} className="mb-4">
+            <input {...getInputProps()} />
+            <div className="w-12 h-12 flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="w-8 h-8 text-orange-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2 text-white">
+              Start Your Presentation
+            </h3>
+            <p className="text-gray-400 mb-8">
+              Drop images here, use AI prompts, or start with a blank canvas
+            </p>
+            <Button
+              variant="outline"
+              className="bg-gray-700 border-gray-600 hover:bg-gray-600 mb-4"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Open file dialog
+                // Workaround: trigger the input's click() directly to avoid type mismatch
+                const input = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+                input?.click();
+              }}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Browse files
+            </Button>
+            <p className="text-xs text-gray-500 mb-8">
+              JPEG, PNG, GIF, WebP up to 50MB
+            </p>
           </div>
-
-          <h3 className="text-xl font-semibold mb-2 text-white">
-            Start Your Presentation
-          </h3>
-          
-          <p className="text-gray-400 mb-8">
-            Drop images here, use AI prompts, or start with a blank canvas
-          </p>
-
-          <Button 
-            variant="outline" 
-            className="bg-gray-700 border-gray-600 hover:bg-gray-600 mb-4"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Browse files
-          </Button>
-
-          <p className="text-xs text-gray-500 mb-8">
-            JPEG, PNG, GIF, WebP up to 50MB
-          </p>
-
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center mb-4">
             <div className="flex-1 h-px bg-gray-700"></div>
             <span className="px-4 text-sm text-gray-500">or</span>
             <div className="flex-1 h-px bg-gray-700"></div>
           </div>
-
+          {/* Start with Blank Canvas button OUTSIDE dropzone */}
           <Button
             onClick={handleStartBlankCanvas}
             variant="ghost"
-            className="mt-6 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+            className="mt-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
           >
             <Plus className="w-4 h-4 mr-2" />
             Start with Blank Canvas
