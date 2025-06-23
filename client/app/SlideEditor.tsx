@@ -326,11 +326,9 @@ export default function SlideEditor({
                 <div
                   key={element.id}
                   className={`absolute border-2 ${
-                    selectedElement === element.id
-                      ? "border-blue-500 bg-blue-50/20"
-                      : activeTool === "eraser"
+                    activeTool === "eraser"
                       ? "border-red-300 hover:border-red-500 hover:bg-red-50/20"
-                      : "border-transparent hover:border-blue-300"
+                      : "border-transparent"
                   } cursor-pointer transition-all`}
                   style={{
                     left: element.x,
@@ -591,15 +589,8 @@ export default function SlideEditor({
               </div>
 
               {/* Tool Instructions */}
-              {activeTool !== "select" && (
-                <div className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded text-sm z-20">
-                  {activeTool === "text" && "Click to add text"}
-                  {activeTool === "shape" && "Click to add shape"}
-                  {activeTool === "alignment" && "Select text to align"}
-                  {activeTool === "crop" && "Select image to crop"}
-                  {activeTool === "eraser" && "Click elements to delete"}
-                  {activeTool === "frame" && "Click to add frame"}
-                </div>
+              {activeTool !== "select" && activeTool !== "eraser" && (
+                <div></div>
               )}
             </div>
           </div>
