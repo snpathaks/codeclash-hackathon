@@ -26,6 +26,8 @@ interface SlideEditorProps {
   currentSlide?: Slide;
   onSlideUpdate?: (slide: Slide) => void;
   onToolChange?: (tool: string) => void;
+  selectedShape?: "rectangle" | "circle" | "triangle";
+  selectedColor?: string;
 }
 
 export default function SlideEditor({
@@ -35,6 +37,8 @@ export default function SlideEditor({
   currentSlide,
   onSlideUpdate,
   onToolChange,
+  selectedShape = "rectangle",
+  selectedColor = "#3b82f6",
 }: SlideEditorProps) {
   const [dragActive, setDragActive] = useState(false);
   const [showSlide, setShowSlide] = useState(false);
@@ -130,7 +134,7 @@ export default function SlideEditor({
         width = 100;
         height = 100;
         style = {
-          backgroundColor: "#3b82f6",
+          backgroundColor: extraProps.backgroundColor || selectedColor,
           borderRadius: "4px",
           shapeType: "rectangle",
         };
@@ -198,7 +202,10 @@ export default function SlideEditor({
       addElement("text", x - 100, y - 20);
       onToolChange?.("select");
     } else if (activeTool === "shape") {
-      addElement("shape", x - 50, y - 50);
+      addElement("shape", x - 50, y - 50, {
+        shapeType: selectedShape,
+        backgroundColor: selectedColor,
+      });
       onToolChange?.("select");
     }
   };
