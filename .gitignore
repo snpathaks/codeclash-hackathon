@@ -1,2 +1,15 @@
-node_modules/
+# Ignore environment variable files
 .env
+server/.env
+client/.env
+
+# Node modules and Python virtual environments
+node_modules/
+client/node_modules/
+.venv/
+venv/
+__pycache__/
+
+# OS generated files
+.DS_Store
+Thumbs.db 
