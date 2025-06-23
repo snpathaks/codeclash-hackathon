@@ -40,6 +40,53 @@ export default function Home() {
   const [showAI, setShowAI] = useState(true);
   const [hasImage, setHasImage] = useState(false);
 
+  // Slides state management
+  const [slides, setSlides] = useState([
+    { title: 'Untitled Slide', content: '' }
+  ]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [presentationId, setPresentationId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Handler: New Slide
+  const handleNewSlide = () => {
+    setSlides((prev) => [...prev, { title: 'Untitled Slide', content: '' }]);
+    setCurrentSlide(slides.length); // set to new slide index
+  };
+
+  // Handler: Save Presentation
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/presentai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: 'Manual save', slides }),
+      });
+      const data = await response.json();
+      if (data.presentation_id) {
+        setPresentationId(data.presentation_id);
+        alert('Presentation saved!');
+      } else {
+        alert('Failed to save presentation.');
+      }
+    } catch (err) {
+      alert('Error saving presentation.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handler: Export Presentation
+  const handleExport = () => {
+    if (!presentationId) {
+      alert('Please save your presentation first!');
+      return;
+    }
+    // TODO: Implement export logic when backend is ready
+    alert('Export to PPTX is not implemented yet.');
+  };
+
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
       {/* Header */}
@@ -50,21 +97,21 @@ export default function Home() {
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              presentAi
+              SlideFlow
             </h1>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600">
+          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600" onClick={handleNewSlide}>
             <Plus className="w-4 h-4 mr-2" />
             New
           </Button>
-          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600">
+          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600" onClick={handleSave} disabled={isSaving}>
             <Save className="w-4 h-4 mr-2" />
-            Save
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
-          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600">
+          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 hover:bg-gray-600" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
@@ -106,7 +153,10 @@ export default function Home() {
 
         {/* Main Canvas Area */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-900 to-gray-800">
-          <SlideEditor hasImage={hasImage} setHasImage={setHasImage} />
+          <SlideEditor 
+            hasImage={hasImage} 
+            setHasImage={setHasImage} 
+          />
         </div>
 
         {/* Right Sidebar - AI Panel */}

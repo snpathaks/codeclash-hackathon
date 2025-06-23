@@ -1,10 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import json
 import re
 from typing import List, Dict, Any
 from dataclasses import dataclass
 import logging
+from io import BytesIO
+from pptx import Presentation
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -276,6 +278,33 @@ def health_check():
         'service': 'PresentAI Backend',
         'version': '1.0.0'
     })
+
+@app.route('/api/presentations/<presentation_id>/export', methods=['GET'])
+def export_presentation_pptx(presentation_id):
+    """Export the presentation as a PPTX file"""
+    slides = slide_manager.get_presentation(presentation_id)
+    if not slides:
+        return jsonify({'error': 'Presentation not found'}), 404
+
+    prs = Presentation()
+    for slide_data in slides:
+        slide_layout = prs.slide_layouts[1]  # Title and Content
+        slide = prs.slides.add_slide(slide_layout)
+        title = slide.shapes.title
+        content = slide.placeholders[1]
+        title.text = slide_data.get('title', '')
+        content.text = slide_data.get('content', '')
+
+    pptx_io = BytesIO()
+    prs.save(pptx_io)
+    pptx_io.seek(0)
+
+    return send_file(
+        pptx_io,
+        mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        as_attachment=True,
+        download_name=f'presentation_{presentation_id}.pptx'
+    )
 
 @app.errorhandler(404)
 def not_found(error):
