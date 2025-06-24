@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,6 @@ import SlideEditor from "./SlideEditor";
 import ToolPanel from "@/components/ToolPanel";
 import { Slide, SlideElement } from "@/types/slide";
 
-// Define your type here
-
 const tools = [
   { id: "select", icon: MousePointer, label: "Select" },
   { id: "crop", icon: Crop, label: "Crop" },
@@ -36,7 +34,22 @@ const tools = [
   { id: "table", icon: Table2, label: "Table" },
 ];
 
+// Pre-generate particle positions to avoid hydration mismatch
+const generateParticles = () => {
+  return Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    left: `${(i * 5.263) % 100}%`, // Deterministic positioning
+    top: `${(i * 7.891) % 100}%`,
+    delay: `${(i * 0.1) % 2}s`,
+    duration: `${2 + (i * 0.1) % 2}s`,
+  }));
+};
+
+const PARTICLES = generateParticles();
+
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const [activeTool, setActiveTool] = useState("select");
   const [showAI, setShowAI] = useState(true);
   const [hasImage, setHasImage] = useState(false);
@@ -84,7 +97,8 @@ export default function App() {
     setIsSaving(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      setPresentationId(`pres_${Date.now()}`);
+      // Use a deterministic ID based on slides content for SSR compatibility
+      setPresentationId(`pres_${slides.length}_${Date.now()}`);
       alert("Presentation saved successfully!");
     } catch (err) {
       console.error("Save error:", err);
@@ -260,6 +274,87 @@ export default function App() {
   };
 
   const handleHideExportMenu = () => setShowExportMenu(false);
+
+  // Handle mounting and loading states
+  useEffect(() => {
+    setIsMounted(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show nothing during SSR to prevent hydration mismatch
+  if (!isMounted) {
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center overflow-hidden relative">
+        {/* Animated background particles - using deterministic positioning */}
+        <div className="absolute inset-0">
+          {PARTICLES.map((particle) => (
+            <div
+              key={particle.id}
+              className="absolute w-2 h-2 bg-white/20 rounded-full animate-pulse"
+              style={{
+                left: particle.left,
+                top: particle.top,
+                animationDelay: particle.delay,
+                animationDuration: particle.duration,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Main loading content */}
+        <div className="text-center z-10">
+          {/* Logo with pulse animation */}
+          <div className="mb-8 relative">
+            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
+              <Sparkles className="w-10 h-10 text-white animate-spin" style={{ animationDuration: '3s' }} />
+            </div>
+            <div className="absolute inset-0 w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl animate-ping opacity-20"></div>
+          </div>
+
+          {/* Brand name with typing effect */}
+          <div className="mb-12">
+            <h1 className="text-6xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-4 animate-pulse">
+              SlideFlow
+            </h1>
+            <p className="text-xl text-gray-300 opacity-80 animate-pulse" style={{ animationDelay: '0.5s' }}>
+              AI-Powered Presentation Editor
+            </p>
+          </div>
+
+          {/* Loading bar */}
+          <div className="w-64 h-2 bg-gray-700 rounded-full mx-auto mb-6 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full animate-pulse" 
+                 style={{ 
+                   animation: 'loadingBar 3s ease-in-out forwards',
+                 }}>
+            </div>
+          </div>
+
+          {/* Loading text */}
+          <p className="text-gray-400 text-sm animate-pulse" style={{ animationDelay: '1s' }}>
+            Initializing your creative workspace...
+          </p>
+        </div>
+
+        {/* Custom CSS animations */}
+        <style jsx>{`
+          @keyframes loadingBar {
+            0% { width: 0%; }
+            50% { width: 60%; }
+            100% { width: 100%; }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
