@@ -252,12 +252,6 @@ SlideFlow was born during CodeClash 2.0, where our team combined AI innovation w
 - In-memory storage (production needs database)
 - CORS configuration for production deployment
 
-## 📞 Support
-
-For questions or support, reach out to the development team:
-- Backend: Ajit Ashwath
-- Frontend: Akanksha & Shalini
-
 ## 🌟 Acknowledgments
 
 - Google Gemini AI for content generation
