@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import ReactDOM from "react-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -16,6 +17,7 @@ import {
   Save,
   Download,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 import PromptInput from "./PromptInput";
 import SlideEditor from "./SlideEditor";
@@ -55,6 +57,14 @@ export default function App() {
 
   const [selectedColor, setSelectedColor] = useState<string>("#3b82f6");
 
+  const exportRef = useRef<HTMLButtonElement>(null);
+  const [exportType, setExportType] = useState<"json" | "pptx">("json");
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exportMenuPos, setExportMenuPos] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  // Add selectedElement state to App
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+
   // Handler: New Slide
   const handleNewSlide = () => {
     const newSlide: Slide = {
@@ -91,8 +101,34 @@ export default function App() {
       return;
     }
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert("Presentation exported successfully!");
+      if (exportType === "json") {
+        const dataStr =
+          "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(slides, null, 2));
+        const dlAnchor = document.createElement("a");
+        dlAnchor.setAttribute("href", dataStr);
+        dlAnchor.setAttribute("download", `presentation_${presentationId}.json`);
+        document.body.appendChild(dlAnchor);
+        dlAnchor.click();
+        dlAnchor.remove();
+        alert("Presentation exported as JSON!");
+      } else if (exportType === "pptx") {
+        const response = await fetch("http://localhost:5000/api/export-pptx", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slides }),
+        });
+        if (!response.ok) throw new Error("Failed to export PPTX");
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `presentation_${presentationId}.pptx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        alert("Presentation exported as PPTX!");
+      }
     } catch (err) {
       console.error("Export error:", err);
       alert("Error exporting presentation. Please try again.");
@@ -106,6 +142,10 @@ export default function App() {
 
   // Handler: Update current slide
   const handleSlideUpdate = (updatedSlide: Slide) => {
+    // If the selected element was deleted, clear selection
+    if (selectedElement && !updatedSlide.elements.some(el => el.id === selectedElement)) {
+      setSelectedElement(null);
+    }
     const newSlides = slides.map((slide, index) =>
       index === currentSlide ? updatedSlide : slide
     );
@@ -182,9 +222,21 @@ export default function App() {
     );
   };
 
-  // Tool panel handlers
+  // Handler: Alignment change
   const handleAlignmentChange = (alignment: "left" | "center" | "right") => {
-    console.log("Alignment changed to:", alignment);
+    if (selectedElement) {
+      setSlides(prevSlides => prevSlides.map((slide, idx) => {
+        if (idx !== currentSlide) return slide;
+        return {
+          ...slide,
+          elements: slide.elements.map(el =>
+            el.id === selectedElement && (el.type === "text" || el.type === "bulletList")
+              ? { ...el, style: { ...el.style, textAlign: alignment } }
+              : el
+          )
+        };
+      }));
+    }
   };
 
   const handleShapeChange = (shape: "rectangle" | "circle" | "triangle") => {
@@ -194,6 +246,20 @@ export default function App() {
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
   };
+
+  const handleShowExportMenu = () => {
+    if (exportRef.current) {
+      const rect = exportRef.current.getBoundingClientRect();
+      setExportMenuPos({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+      setShowExportMenu(true);
+    }
+  };
+
+  const handleHideExportMenu = () => setShowExportMenu(false);
 
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
@@ -259,15 +325,82 @@ export default function App() {
             {isSaving ? "Saving..." : "Save"}
           </Button>
           <Button
+            ref={exportRef}
             variant="outline"
             size="sm"
-            className="bg-gray-700 border-gray-600 hover:bg-gray-600"
-            onClick={handleExport}
+            className="bg-gray-700 border-gray-600 hover:bg-gray-600 relative"
             disabled={!presentationId}
+            onMouseEnter={handleShowExportMenu}
+            onMouseLeave={handleHideExportMenu}
           >
             <Download className="w-4 h-4 mr-2" />
             Export
+            <ChevronDown className="w-3 h-3 ml-1" />
           </Button>
+          {showExportMenu && exportMenuPos && ReactDOM.createPortal(
+            <div
+              className="fixed bg-gray-800 border border-gray-700 rounded shadow-lg z-[9999] pointer-events-auto text-white text-sm"
+              style={{
+                top: exportMenuPos.top,
+                left: exportMenuPos.left,
+                width: exportMenuPos.width,
+              }}
+              onMouseEnter={handleShowExportMenu}
+              onMouseLeave={handleHideExportMenu}
+            >
+              <button
+                className={`w-full text-left px-4 py-1.5 hover:bg-gray-700 ${exportType === "json" ? "bg-gray-700" : ""} text-white text-sm`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExportType("json");
+                  setShowExportMenu(false);
+                  if (!presentationId) return;
+                  const dataStr =
+                    "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(slides, null, 2));
+                  const dlAnchor = document.createElement("a");
+                  dlAnchor.setAttribute("href", dataStr);
+                  dlAnchor.setAttribute("download", `presentation_${presentationId}.json`);
+                  document.body.appendChild(dlAnchor);
+                  dlAnchor.click();
+                  dlAnchor.remove();
+                }}
+              >
+                Export as JSON
+              </button>
+              <button
+                className={`w-full text-left px-4 py-1.5 hover:bg-gray-700 ${exportType === "pptx" ? "bg-gray-700" : ""} text-white text-sm`}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setExportType("pptx");
+                  setShowExportMenu(false);
+                  if (!presentationId) return;
+                  try {
+                    const response = await fetch("http://localhost:5000/api/export-pptx", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ slides }),
+                    });
+                    if (!response.ok) throw new Error("Failed to export PPTX");
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `presentation_${presentationId}.pptx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                  } catch (err) {
+                    console.error("Export error:", err);
+                    alert("Error exporting presentation. Please try again.");
+                  }
+                }}
+              >
+                Export as PPTX
+              </button>
+            </div>,
+            document.body
+          )}
           <Separator orientation="vertical" className="h-6 bg-gray-600" />
         </div>
       </header>
@@ -304,6 +437,7 @@ export default function App() {
             onAlignmentChange={handleAlignmentChange}
             onShapeChange={handleShapeChange}
             onColorChange={handleColorChange}
+            selectedElement={selectedElement}
             onTableAdd={handleTableAdd}
           />
         </div>
@@ -319,6 +453,8 @@ export default function App() {
             onToolChange={handleToolSelect}
             selectedShape={selectedShape}
             selectedColor={selectedColor}
+            selectedElement={selectedElement}
+            setSelectedElement={setSelectedElement}
           />
         </div>
 

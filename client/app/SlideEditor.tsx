@@ -28,6 +28,8 @@ interface SlideEditorProps {
   onToolChange?: (tool: string) => void;
   selectedShape?: "rectangle" | "circle" | "triangle";
   selectedColor?: string;
+  selectedElement?: string | null;
+  setSelectedElement?: (id: string | null) => void;
 }
 
 export default function SlideEditor({
@@ -39,13 +41,14 @@ export default function SlideEditor({
   onToolChange,
   selectedShape = "rectangle",
   selectedColor = "#3b82f6",
+  selectedElement,
+  setSelectedElement,
 }: SlideEditorProps) {
   const [dragActive, setDragActive] = useState(false);
   const [showSlide, setShowSlide] = useState(false);
   const [slideTitle, setSlideTitle] = useState("");
   const [slideNotes, setSlideNotes] = useState("");
   const [editingElement, setEditingElement] = useState<string | null>(null);
-  const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [draggedElement, setDraggedElement] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const slideRef = useRef<HTMLDivElement>(null);
@@ -185,19 +188,16 @@ export default function SlideEditor({
     updateSlide({
       elements: currentSlide.elements.filter((el) => el.id !== elementId),
     });
-    setSelectedElement(null);
+    setSelectedElement?.(null);
   };
 
   const handleSlideClick = (e: React.MouseEvent) => {
     if (!slideRef.current) return;
-
     const rect = slideRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
     // Deselect element if clicking on empty space
-    setSelectedElement(null);
-
+    setSelectedElement?.(null);
     if (activeTool === "text") {
       addElement("text", x - 100, y - 20);
       onToolChange?.("select");
@@ -222,13 +222,11 @@ export default function SlideEditor({
 
   const handleElementClick = (e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
-
     if (activeTool === "eraser") {
       deleteElement(elementId);
       return;
     }
-
-    setSelectedElement(elementId);
+    setSelectedElement?.(elementId);
   };
 
   const handleElementDoubleClick = (elementId: string) => {

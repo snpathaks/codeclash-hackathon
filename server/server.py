@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import google.generativeai as genai
 import json
@@ -7,6 +7,11 @@ import os
 from datetime import datetime
 import logging
 from dotenv import load_dotenv
+from io import BytesIO
+try:
+    from pptx import Presentation
+except ImportError:
+    Presentation = None
 
 # Load environment variables
 load_dotenv()
@@ -521,6 +526,63 @@ def health_check():
         "gemini_configured": model is not None,
         "version": "1.0.0"
     })
+
+@app.route('/api/export-pptx', methods=['POST'])
+def export_pptx():
+    """Export slides as a PPTX file"""
+    if Presentation is None:
+        return jsonify({"error": "python-pptx is not installed on the server."}), 500
+    try:
+        data = request.get_json()
+        slides_data = data.get('slides', [])
+        prs = Presentation()
+        # Remove default slide
+        if len(prs.slides) > 0:
+            xml_slides = prs.slides._sldIdLst
+            slides = list(xml_slides)
+            for sld in slides:
+                xml_slides.remove(sld)
+        for slide in slides_data:
+            sld = prs.slides.add_slide(prs.slide_layouts[1])  # Title and Content
+            title = slide.get('title', 'Slide')
+            elements = slide.get('elements', [])
+            if sld.shapes.title:
+                sld.shapes.title.text = title
+            # Find bullet points in elements
+            bullet_points = []
+            for el in elements:
+                if el.get('type') == 'text' and '•' in el.get('content', ''):
+                    bullet_points.extend([line.strip('• ').strip() for line in el['content'].split('\n') if line.strip()])
+            # Add content to placeholder if it exists
+            content_shape = None
+            for shape in sld.placeholders:
+                if shape.placeholder_format.idx == 1:
+                    content_shape = shape
+                    break
+            if content_shape is not None and hasattr(content_shape, 'text_frame'):
+                tf = content_shape.text_frame
+                tf.clear()
+                if bullet_points:
+                    for idx, point in enumerate(bullet_points):
+                        if idx == 0:
+                            tf.text = point
+                        else:
+                            p = tf.add_paragraph()
+                            p.text = point
+                else:
+                    tf.text = slide.get('content', '')
+        pptx_io = BytesIO()
+        prs.save(pptx_io)
+        pptx_io.seek(0)
+        return send_file(
+            pptx_io,
+            mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            as_attachment=True,
+            download_name='presentation.pptx'
+        )
+    except Exception as e:
+        logger.error(f"Error exporting PPTX: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 # Error handlers
 @app.errorhandler(404)
