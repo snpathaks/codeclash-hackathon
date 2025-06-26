@@ -4,7 +4,7 @@
 
 *A CodeClash 2.0 Hackathon Project*
 
-## 🏆 Team (2+1)
+## 🏆 Team (2+1):
 - **Ajit Ashwath** (Team Leader)(AI  related domain work and Website's efficiency Correction work)
 - **Akanksha** (Frontend Development)
 - **Shalini** (Backend Development)
